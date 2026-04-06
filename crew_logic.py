@@ -1,33 +1,24 @@
 import os
-# TEMP (easy): put your key here first; later move to secrets
-os.environ["OPENAI_API_KEY"] = "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"
+from openai import OpenAI
 
-from crewai import Agent, Task, Crew
+client = OpenAI()
 
 def run_analysis(data):
 
-    agent = Agent(
-        role="Dental Specialist",
-        goal="Suggest treatment plan based on OPG and complaint",
-        backstory="Experienced dentist"
+    prompt = f"""
+    You are a dental expert.
+
+    Patient:
+    Age: {data['age']}
+    Complaint: {data['complaint']}
+    OPG: {data['opg_description']}
+
+    Suggest a treatment plan.
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}]
     )
 
-    task = Task(
-        description=f"""
-        Patient:
-        Age: {data['age']}
-        Complaint: {data['complaint']}
-        OPG: {data['opg_description']}
-
-        Give a simple treatment plan.
-        """,
-        agent=agent
-    )
-
-    crew = Crew(
-        agents=[agent],
-        tasks=[task]
-    )
-
-    result = crew.kickoff()
-    return str(result)
+    return response.choices[0].message.content
